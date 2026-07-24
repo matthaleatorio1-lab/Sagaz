@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "Xq6AR_csdH4C3DP_ENqUt"
+uri = "file://cleanup/cleanup.exe"
+type = "unspecified"
+title = "cleanup.exe"
