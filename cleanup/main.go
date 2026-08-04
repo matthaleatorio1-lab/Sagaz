@@ -8,75 +8,32 @@ import (
 )
 
 func main() {
-	localAppData := os.Getenv("LOCALAPPDATA")
-	if localAppData == "" {
-		fmt.Println("[ERROR] LOCALAPPDATA environment variable not found. Are you running this on Windows?")
-		pause()
-		return
-	}
+	local := os.Getenv("LOCALAPPDATA")
+	removed := 0
 
-	var totalRemoved int
-	var totalErrors int
-
-	fmt.Println("=== PyInstaller Cleanup Utility ===")
-	fmt.Println()
-
-	// 1. Remove _MEI* folders in %LOCALAPPDATA%\Temp
-	tempDir := filepath.Join(localAppData, "Temp")
-	fmt.Printf("Scanning: %s\\_MEI*\n", tempDir)
-
-	entries, err := os.ReadDir(tempDir)
-	if err != nil {
-		fmt.Printf("[WARNING] Could not read temp dir: %v\n", err)
-	} else {
-		for _, entry := range entries {
-			if entry.IsDir() && strings.HasPrefix(entry.Name(), "_MEI") {
-				fullPath := filepath.Join(tempDir, entry.Name())
-				err := os.RemoveAll(fullPath)
-				if err != nil {
-					fmt.Printf("  [FAIL] %s — %v\n", entry.Name(), err)
-					totalErrors++
-				} else {
-					fmt.Printf("  [OK]   Removed %s\n", entry.Name())
-					totalRemoved++
-				}
+	// Remove _MEI* folders left by PyInstaller
+	entries, _ := os.ReadDir(filepath.Join(local, "Temp"))
+	for _, e := range entries {
+		if e.IsDir() && strings.HasPrefix(e.Name(), "_MEI") {
+			path := filepath.Join(local, "Temp", e.Name())
+			if os.RemoveAll(path) == nil {
+				fmt.Println("Removed:", path)
+				removed++
 			}
 		}
 	}
 
-	// 2. Remove mat-debug-*.log files in WindowsCommunicationsApps temp
-	mailTemp := filepath.Join(
-		localAppData,
-		"Packages",
-		"microsoft.windowscommunicationsapps_8wekyb3d8bbwe",
-		"AC", "Temp",
-	)
-	fmt.Printf("\nScanning: %s\\mat-debug-*.log\n", mailTemp)
-
-	logMatches, err := filepath.Glob(filepath.Join(mailTemp, "mat-debug-*.log"))
-	if err != nil {
-		fmt.Printf("[WARNING] Could not scan mail temp dir: %v\n", err)
-	} else {
-		for _, logFile := range logMatches {
-			err := os.Remove(logFile)
-			if err != nil {
-				fmt.Printf("  [FAIL] %s — %v\n", filepath.Base(logFile), err)
-				totalErrors++
-			} else {
-				fmt.Printf("  [OK]   Removed %s\n", filepath.Base(logFile))
-				totalRemoved++
-			}
+	// Remove mat-debug-*.log files
+	logs, _ := filepath.Glob(filepath.Join(local,
+		`Packages\microsoft.windowscommunicationsapps_8wekyb3d8bbwe\AC\Temp\mat-debug-*.log`))
+	for _, f := range logs {
+		if os.Remove(f) == nil {
+			fmt.Println("Removed:", f)
+			removed++
 		}
 	}
 
-	// Summary
-	fmt.Println()
-	fmt.Printf("Done. Removed: %d item(s)  |  Errors: %d\n", totalRemoved, totalErrors)
-	pause()
-}
-
-func pause() {
-	fmt.Print("\nPress Enter to exit...")
-	buf := make([]byte, 1)
-	os.Stdin.Read(buf)
+	fmt.Printf("\nDone. %d item(s) removed.\n", removed)
+	fmt.Print("Press Enter to exit...")
+	os.Stdin.Read(make([]byte, 1))
 }
