@@ -1,0 +1,6 @@
+# Compiled binary
+cleanup.exe
+
+# Go build cache
+*.test
+*.out
