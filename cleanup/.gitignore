@@ -1,5 +1,5 @@
-# Compiled binary
-cleanup.exe
+# Compiled binaries (uncomment to ignore local builds)
+# cleanup.exe
 
 # Go build cache
 *.test
